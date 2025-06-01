@@ -7,15 +7,21 @@ module.exports = {
         "message": "git clone https://github.com/shitcoinsherpa/AutoGif.git app"
       }
     },
-    // Step 2: Create Python virtual environment (not conda)
+    // Step 2: Install platform-specific PyTorch using torch.js
     {
-      "method": "shell.run",
+      "method": "script.start",
       "params": {
-        "path": "app",
-        "message": "python -m venv env"
+        "uri": "torch.js",
+        "params": {
+          "venv": "env",                // Edit this to customize the venv folder path
+          "path": "app",                // Edit this to customize the path to start the shell from
+          // xformers: true   // uncomment this line if your project requires xformers
+          // triton: true   // uncomment this line if your project requires triton
+          // sageattention: true   // uncomment this line if your project requires sageattention
+        }
       }
     },
-    // Step 3: Upgrade pip in the virtual environment
+    // Step 3: Upgrade pip
     {
       "method": "shell.run",
       "params": {
@@ -24,62 +30,19 @@ module.exports = {
         "message": "python -m pip install --upgrade pip"
       }
     },
-    // Step 4: Install PyTorch (platform-specific)
-    {
-      "when": "{{platform === 'win32' && gpu === 'nvidia'}}",
-      "method": "shell.run",
-      "params": {
-        "venv": "env",
-        "path": "app",
-        "message": "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121"
-      }
-    },
-    {
-      "when": "{{platform === 'win32' && gpu !== 'nvidia'}}",
-      "method": "shell.run",
-      "params": {
-        "venv": "env",
-        "path": "app",
-        "message": "pip install torch torchvision torchaudio"
-      }
-    },
-    {
-      "when": "{{platform === 'darwin'}}",
-      "method": "shell.run",
-      "params": {
-        "venv": "env",
-        "path": "app",
-        "message": "pip install torch torchvision torchaudio"
-      }
-    },
-    {
-      "when": "{{platform === 'linux' && gpu === 'nvidia'}}",
-      "method": "shell.run",
-      "params": {
-        "venv": "env",
-        "path": "app",
-        "message": "pip install torch torchvision torchaudio"
-      }
-    },
-    {
-      "when": "{{platform === 'linux' && gpu !== 'nvidia'}}",
-      "method": "shell.run",
-      "params": {
-        "venv": "env",
-        "path": "app",
-        "message": "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu"
-      }
-    },
-    // Step 5: Install requirements
+    // Step 4: Install requirements
     {
       "method": "shell.run",
       "params": {
         "venv": "env",
         "path": "app",
-        "message": "pip install -r requirements.txt"
+        "message": [
+          "pip install gradio devicetorch",
+          "pip install -r requirements.txt"
+        ]
       }
     },
-    // Step 6: Install additional packages
+    // Step 5: Install additional packages
     {
       "method": "shell.run",
       "params": {
@@ -91,7 +54,7 @@ module.exports = {
         ]
       }
     },
-    // Step 7: Set up platform-specific binaries
+    // Step 6: Set up platform-specific binaries
     {
       "when": "{{platform === 'darwin'}}",
       "method": "shell.run",
@@ -138,7 +101,7 @@ module.exports = {
         ]
       }
     },
-    // Step 8: Build PyInstaller executable (simplified, without problematic _socket.pyd)
+    // Step 7: Build PyInstaller executable (simplified)
     {
       "method": "shell.run",
       "params": {
@@ -147,7 +110,7 @@ module.exports = {
         "message": "python -m pyinstaller --onefile --name autogif-main autogif/main.py || echo 'PyInstaller build failed, but installation can continue'"
       }
     },
-    // Step 9: Notify completion
+    // Step 8: Notify completion
     {
       "method": "notify",
       "params": {
